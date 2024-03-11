@@ -1,8 +1,14 @@
 package telegram
 
 import (
+	"errors"
+
 	"github.com/alexthvest/homelab-bridge/pkg/homelab"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+)
+
+var (
+	ErrArgumentNotFound = errors.New("argument not found")
 )
 
 type Context struct {
@@ -12,8 +18,16 @@ type Context struct {
 	args    map[string]string
 }
 
-func (c Context) Argument(name string) {
+type Argument interface {
+	Parse(value string) error
+}
 
+func (c Context) Argument(name string, value Argument) error {
+	argValue, ok := c.args[name]
+	if !ok {
+		return ErrArgumentNotFound
+	}
+	return value.Parse(argValue)
 }
 
 func (c Context) Message() *tgbotapi.Message {

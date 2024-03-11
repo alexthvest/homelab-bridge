@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 
@@ -40,14 +39,22 @@ func setupRouter() *telegram.Router {
 }
 
 func runHandler(ctx telegram.Context) error {
-	doneChan, errChan := ctx.QueueTask("stable-diffusion", "txt2img")
-	go func() {
-		select {
-		case <-doneChan:
-			ctx.Reply("DONE")
-		case err := <-errChan:
-			ctx.Reply(fmt.Sprintf("error: %v", err))
-		}
-	}()
+	var serviceID telegram.String
+	if err := ctx.Argument("service", &serviceID); err != nil {
+		return err
+	}
+
+	var taskID telegram.String
+	if err := ctx.Argument("task", &taskID); err != nil {
+		return err
+	}
+
+	doneChan, errChan := ctx.QueueTask(string(serviceID), string(taskID))
+	select {
+	case <-doneChan:
+		ctx.Reply("DONE")
+	case err := <-errChan:
+		return err
+	}
 	return nil
 }

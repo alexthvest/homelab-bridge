@@ -48,6 +48,7 @@ func (b Bridge) handleCommand(ctx homelab.Context, message *tgbotapi.Message) {
 		Context: ctx,
 		api:     b.api,
 		message: message,
+		args:    make(map[string]string),
 	}
 	if err := b.router.Execute(routerCtx); err != nil {
 		errMessage := tgbotapi.NewMessage(message.Chat.ID, err.Error())

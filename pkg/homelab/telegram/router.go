@@ -40,10 +40,13 @@ func (r *Router) Execute(ctx Context) error {
 
 func (r *Router) executeRoute(ctx Context, route *Route) error {
 	args := ctx.Message().CommandArguments()
+	argPos := 0
 
-	for pos, token := range strings.Fields(args) {
-		if len(route.args) > 0 && pos < len(route.args) {
-			fmt.Println("Parsing arg")
+	for _, token := range strings.Fields(args) {
+		if len(route.args) > 0 && argPos < len(route.args) {
+			name := route.args[argPos]
+			ctx.args[name] = token
+			argPos++
 			continue
 		}
 
@@ -53,6 +56,7 @@ func (r *Router) executeRoute(ctx Context, route *Route) error {
 		}
 
 		route = newRoute
+		argPos = 0
 	}
 
 	if route.handler == nil {
@@ -72,7 +76,8 @@ type Route struct {
 
 func NewRoute() *Route {
 	return &Route{
-		sub: make(map[string]*Route),
+		args: make([]string, 0),
+		sub:  make(map[string]*Route),
 	}
 }
 
@@ -83,6 +88,7 @@ func (r *Route) Command(name string) *Route {
 }
 
 func (r *Route) Argument(name string) {
+	r.args = append(r.args, name)
 }
 
 func (r *Route) Handler(handler Handler) {
